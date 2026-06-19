@@ -24,6 +24,9 @@ overview and command reference.
   (`pytest`, `ruff`) are in the `[dependency-groups] dev` group and install by default with
   `uv sync`. Use `--extra llm` (or `--extra openai`/`--extra anthropic`) to install the real
   providers; omit it for mock-only.
+- `[dependency-groups]` needs uv >= 0.4.27. On older uv, `uv run ruff`/`pytest` fails with
+  "Failed to spawn"; the dev tools are also exposed as a `dev` extra, so `uv sync --extra dev`
+  (or `uvx ruff check .`) works on any uv version.
 - The cloud **update script** uses pip + a repo-local `.venv` (from `requirements.txt`) so it
   works even if `uv` is absent. If you use that path instead of uv, `source .venv/bin/activate`
   before running tools, or invoke the CLI as `python -m rage_bench`.

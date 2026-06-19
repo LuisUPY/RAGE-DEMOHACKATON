@@ -52,6 +52,18 @@ uv run pytest
 > uv keeps the environment in `.venv` by default; you don't have to touch it. To put it
 > elsewhere, set `UV_PROJECT_ENVIRONMENT=/path/to/env`.
 
+**Troubleshooting `error: Failed to spawn: ruff` (or `pytest`)** — this means the dev
+tools weren't installed, which happens on **older uv** that ignores the
+`[dependency-groups]` table. Fix it either way:
+
+```bash
+uv self update            # update uv (dependency groups need uv >= 0.4.27), then: uv sync
+# --- or, works on any uv version: ---
+uv sync --extra dev       # installs ruff + pytest as an extra
+# --- or, run ruff without installing it at all: ---
+uvx ruff check .
+```
+
 ### With pip + venv (alternative)
 
 ```bash

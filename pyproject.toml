@@ -15,8 +15,14 @@ openai = ["openai>=1.40.0"]
 anthropic = ["anthropic>=0.34.0"]
 # Convenience extra to pull in every real-LLM provider at once.
 llm = ["openai>=1.40.0", "anthropic>=0.34.0"]
+# Dev tools also exposed as an extra so they install on ANY uv version
+# (`uv sync --extra dev`), in addition to the modern [dependency-groups] table below.
+dev = ["pytest>=8.0.0", "ruff>=0.5.0"]
 
 # Dev tooling lives in a PEP 735 dependency group, which `uv sync` installs by default.
+# Requires uv >= 0.4.27 (older uv ignores this table). If `uv run ruff`/`pytest` fails
+# with "Failed to spawn", update uv (`uv self update`) or install the dev tools as an
+# extra: `uv sync --extra dev`.
 [dependency-groups]
 dev = ["pytest>=8.0.0", "ruff>=0.5.0"]
 
