@@ -1,0 +1,12 @@
+# Core runtime dependencies for the RAGE jailbreak benchmark harness.
+# LLM provider SDKs are optional at runtime: they are only imported when the
+# corresponding provider is selected. The mock provider needs none of them.
+openai>=1.40.0
+anthropic>=0.34.0
+pydantic>=2.7.0
+python-dotenv>=1.0.0
+rich>=13.7.0
+
+# Development / testing
+pytest>=8.0.0
+ruff>=0.5.0
