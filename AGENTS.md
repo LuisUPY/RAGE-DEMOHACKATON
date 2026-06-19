@@ -17,11 +17,20 @@ overview and command reference.
 
 ## Cursor Cloud specific instructions
 
-- Standard setup/lint/test/run commands live in `README.md`. The update script installs
-  deps into a repo-local virtualenv at `.venv`; activate it with `source .venv/bin/activate`
-  before running `pytest`, `ruff`, or `python -m rage_bench`.
-- The package is run via `python -m rage_bench` and tests import it via pytest's
-  `pythonpath = ["."]` (set in `pyproject.toml`); there is **no editable install**, so run
+- Standard setup/lint/test/run commands live in `README.md`.
+- The project is **uv-native** (`pyproject.toml` + committed `uv.lock`). The preferred
+  workflow is `uv sync --extra llm` then `uv run rage-bench ...` / `uv run pytest` /
+  `uv run ruff check .` — uv manages the env, no manual `.venv` activation needed. Dev tools
+  (`pytest`, `ruff`) are in the `[dependency-groups] dev` group and install by default with
+  `uv sync`. Use `--extra llm` (or `--extra openai`/`--extra anthropic`) to install the real
+  providers; omit it for mock-only.
+- `[dependency-groups]` needs uv >= 0.4.27. On older uv, `uv run ruff`/`pytest` fails with
+  "Failed to spawn"; the dev tools are also exposed as a `dev` extra, so `uv sync --extra dev`
+  (or `uvx ruff check .`) works on any uv version.
+- The cloud **update script** uses pip + a repo-local `.venv` (from `requirements.txt`) so it
+  works even if `uv` is absent. If you use that path instead of uv, `source .venv/bin/activate`
+  before running tools, or invoke the CLI as `python -m rage_bench`.
+- Tests import the package via pytest's `pythonpath = ["."]` (set in `pyproject.toml`), so run
   pytest/CLI from the repo root.
 - The `mock` provider is fully offline and needs no secrets — use it to validate the harness
   end-to-end (`--model vulnerable|guarded|hardened`). It is a deterministic simulator, **not**
