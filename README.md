@@ -34,6 +34,26 @@ overload, and behavior hijacking.
 
 ## Setup
 
+### With [uv](https://docs.astral.sh/uv/) (recommended)
+
+`uv` manages the environment for you — you never create or activate a virtualenv by hand.
+
+```bash
+uv sync --extra llm   # installs everything (omit --extra llm for the mock provider only)
+```
+
+Then prefix any command with `uv run`:
+
+```bash
+uv run rage-bench --provider mock --model vulnerable --show-failures
+uv run pytest
+```
+
+> uv keeps the environment in `.venv` by default; you don't have to touch it. To put it
+> elsewhere, set `UV_PROJECT_ENVIRONMENT=/path/to/env`.
+
+### With pip + venv (alternative)
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -46,32 +66,35 @@ Run against the offline mock model (no API key needed):
 
 ```bash
 # Simulated weak model — expect a high ASR
-python -m rage_bench --provider mock --model vulnerable --show-failures
+uv run rage-bench --provider mock --model vulnerable --show-failures
 
 # Simulated partially-defended model
-python -m rage_bench --provider mock --model guarded
+uv run rage-bench --provider mock --model guarded
 
 # Simulated strong defense (RAGE-style) — expect 0%
-python -m rage_bench --provider mock --model hardened
+uv run rage-bench --provider mock --model hardened
 ```
 
 Run against a real LLM (set the key first):
 
 ```bash
 export OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY=...
-python -m rage_bench --provider openai --model gpt-4o-mini --output results/openai.json
-python -m rage_bench --provider anthropic --model claude-3-5-sonnet-latest
+uv run rage-bench --provider openai --model gpt-4o-mini --output results/openai.json
+uv run rage-bench --provider anthropic --model claude-3-5-sonnet-latest
 ```
 
 `--output PATH` writes the full per-case JSON report. `--dataset PATH` runs a custom
 attack set (same schema as `rage_bench/data/attacks.json`).
 
+> `rage-bench` is the installed console script. If you used the pip+venv path instead of
+> uv, run it the same way after activating the venv, or use `python -m rage_bench`.
+>
 > The `mock` provider is a deterministic **simulator** for validating the harness offline;
 > its numbers are illustrative. Use a real provider to measure an actual model.
 
 ## Development
 
 ```bash
-ruff check .   # lint
-pytest         # tests
+uv run ruff check .   # lint
+uv run pytest         # tests
 ```
