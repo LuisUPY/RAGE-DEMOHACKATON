@@ -16,9 +16,24 @@ más específica del tema. **Acción pendiente:** definir explícitamente el nue
 aquí (placeholder abajo). Todo el contexto de las secciones siguientes es reutilizable como base
 de conocimiento, aunque el alcance final cambie.
 
-> **NUEVO ENFOQUE (a completar por el equipo):**
-> _[Describir aquí la idea específica en la que se reenfoca el proyecto, el threat model concreto
-> y las 1–3 contribuciones que se buscan.]_
+> **NUEVO ENFOQUE (definido):**
+> El proyecto se reenfoca en **defender agentes LLM conectados a herramientas (APIs/bases de datos)
+> contra prompt injection MULTI-TURNO / de escalación gradual**, mediante un **filtro semántico
+> dinámico con estado** (evalúa el *cambio de intención entre turnos*, no solo palabras prohibidas),
+> y se mide con una **métrica novedosa: el AUC de degradación** — score de vulnerabilidad **0–5 por
+> turno** (eje Y) vs turnos de conversación (eje X), integrado con la **regla del trapecio**. AUC
+> bajo = la defensa contuvo el ataque en el tiempo; AUC alto = el guardrail colapsó en turnos
+> avanzados.
+>
+> **Threat model concreto:** un atacante que **escala gradualmente** a lo largo de varios turnos
+> para que un **agente conectado** ejecute una acción destructiva o exfiltre datos. Caso grave
+> demostrativo: inyección que intenta `DROP TABLE` / consulta maliciosa sobre una **DB de ventas
+> falsa (SQLite en memoria)**.
+>
+> **Contribuciones (1–3):** (1) la **métrica AUC de degradación multi-turno** (mide *cuánto aguanta*
+> la defensa en el tiempo, no *cuántas* veces bloquea); (2) el **filtro semántico dinámico con
+> estado** (barrera contextual); (3) la **evaluación sobre agentes conectados** (acciones reales,
+> no chats puros). El RAG de amenazas y el motor de decisión quedan como soporte de la arquitectura.
 
 Además, el proyecto participa en el **Global South AI Safety Hackathon (junio 2026)**, cuyo
 template oficial impone estructura de entrega y criterios de evaluación (ver §15).
@@ -151,17 +166,38 @@ Fuente: OWASP Top 10 for LLM Applications 2025 (https://genai.owasp.org/llm-top-
 
 ---
 
-## 10. Pregunta de investigación e hipótesis
+## 10. Pregunta de investigación e hipótesis (ACTUALIZADA al nuevo enfoque)
 
-**Principal:** ¿En qué medida una capa de gobernanza basada en RAG (intención + recuperación de
-amenazas + decisión) reduce el ASR de prompt injection (OWASP LLM01) en agentes basados en LLM, y a
-qué costo de latencia/cómputo y de falsos positivos, comparada con las defensas actuales?
+**Principal:** ¿Una defensa **con estado y consciente del contexto** —que evalúa el *cambio de
+intención entre turnos*— contiene los ataques de prompt injection **multi-turno / de escalación
+gradual** sobre **agentes LLM conectados a herramientas (APIs/DB)** mejor que los guardrails
+tradicionales de un solo turno, **medido mediante el AUC de degradación de la vulnerabilidad (score
+0–5 por turno)** a lo largo de la conversación, y con qué costo de latencia y falsos positivos?
 
-- **H1 (efectividad):** RAGE reduce significativamente el ASR vs solo system prompt.
-- **H2 (costo):** sobrecosto bajo (~+1–15%) y latencia tolerable.
-- **H3 (utilidad):** baja tasa de falsos positivos.
-- **H4 (adaptabilidad):** agregar un ataque al KB mejora la detección **sin reentrenar**.
-- **H5 (robustez temporal):** el AUC de degradación de RAGE se mantiene bajo a lo largo de los turnos.
+**Sub-preguntas:**
+- **SQ1:** ¿El **AUC de degradación** distingue de forma fiable una defensa robusta de una que
+  colapsa en turnos avanzados (vs solo *contar* bloqueos)?
+- **SQ2:** ¿Evaluar el **cambio de intención entre turnos** detecta escalaciones graduales que un
+  filtro de un solo turno pasa por alto?
+- **SQ3:** En un agente conectado a DB, ¿la defensa **impide acciones destructivas** (`DROP TABLE`)
+  / exfiltración aunque la inyección llegue al agente?
+
+**Hipótesis:**
+- **H1 (robustez temporal):** AUC(defensa contextual) ≪ AUC(guardrail single-turn) en ataques multi-turno.
+- **H2 (mecanismo):** el filtro de *cambio de intención* detecta escalaciones que el de palabras/single-turn no.
+- **H3 (acción / caso grave):** con la defensa, la tasa (ground-truth) de acciones prohibidas ejecutadas ≈ 0.
+- **H4 (utilidad):** el AUC también es **bajo en conversaciones benignas** (no over-refusal), con sobrecosto/latencia tolerables.
+- **H5 (adaptabilidad, si se conserva el RAG):** nuevas amenazas al KB **sin reentrenar**.
+
+> **Rigor metodológico (no negociable):** el eje Y (score 0–5) debe venir de **ground truth**
+> (¿el sistema realmente filtró el canario / ejecutó la acción?), NO del score que la defensa se
+> asigna a sí misma; y el **AUC debe normalizarse** (÷ score_máx × nº turnos) para comparar
+> conversaciones de distinta longitud. Graficar dos curvas (sin defensa vs con defensa) y reportar
+> el **turno de compromiso**.
+
+> _Versión anterior (solo contexto, ya superada):_ "¿En qué medida una capa de gobernanza basada en
+> RAG reduce el ASR de prompt injection vs las defensas actuales, y a qué costo?" — se mantuvo como
+> antecedente; el nuevo enfoque la afina hacia lo multi-turno + AUC + agentes conectados.
 
 ---
 
@@ -181,8 +217,9 @@ RAGE bloquea ataques antes de llamar al LLM caro → ahorra llamadas. El costo c
 
 ## 12. Métricas de evaluación
 
-ASR (global y por categoría OWASP) · severidad 0–100 con bandas · **AUC de degradación multi-turno
-(normalizado)** · **tasa de falsos positivos** (utilidad) · **latencia y sobrecosto**.
+**AUC de degradación multi-turno** (métrica estrella; score de vulnerabilidad **0–5/turno**,
+normalizado) · **turno de compromiso** · ASR (global y por categoría OWASP) · severidad 0–100 con
+bandas · **tasa de falsos positivos** (utilidad; AUC en tráfico benigno) · **latencia y sobrecosto**.
 
 ---
 
